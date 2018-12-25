@@ -1,6 +1,6 @@
 {
   "name": "z-games-six-nimmt",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "6 nimmt! game module for tiny board games portal",
   "main": "dist/index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "url": "git+https://github.com/zinovik/z-games-six-nimmt.git"
   },
   "author": "Max Zinovik",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/zinovik/z-games-six-nimmt/issues"
   },
