@@ -1,6 +1,6 @@
 {
   "name": "z-games-six-nimmt",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "6 nimmt! game module for tiny board games portal",
   "main": "dist/index.js",
   "scripts": {
