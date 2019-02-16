@@ -1,6 +1,6 @@
 {
   "name": "z-games-six-nimmt",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "6 nimmt! game module for tiny board games portal",
   "main": "dist/index.js",
   "scripts": {
@@ -18,9 +18,9 @@
   },
   "homepage": "https://github.com/zinovik/z-games-six-nimmt#readme",
   "devDependencies": {
-    "typescript": "^3.2.2"
+    "typescript": "^3.3.3"
   },
   "dependencies": {
-    "z-games-base-game": "0.0.4"
+    "z-games-base-game": "0.0.9"
   }
 }
