@@ -3,6 +3,8 @@ import { BaseGame } from 'z-games-base-game';
 import {
   ISixNimmtData,
   ISixNimmtPlayer,
+  ISixNimmtCardMove,
+  ISixNimmtRowNumberMove,
   ISixNimmtMove,
   ISixNimmtCard,
 } from './interfaces';
@@ -42,8 +44,9 @@ export class SixNimmt extends BaseGame {
       cardsLeft: 0,
       players: [],
       currentRound: 0,
-      currentRoundState: 0,
+      currentRoundMove: 0,
       currentMoves: [],
+      isCardsPlaying: false,
     };
 
     return {
@@ -87,7 +90,6 @@ export class SixNimmt extends BaseGame {
       return {
         ...player,
         cardsHand,
-        cardsHandCount: cardsHand.length,
         cardsTaken: [],
         points: 0,
       };
@@ -108,6 +110,7 @@ export class SixNimmt extends BaseGame {
         cardsTable,
         cardsLeft: cards.length,
         players,
+        isCardsPlaying: true,
       }), nextPlayersIds,
     };
   }
@@ -123,6 +126,7 @@ export class SixNimmt extends BaseGame {
       gameData.players[index] = {
         ...gameData.players[index],
         cardsHand: [],
+        cardsTaken: [],
       };
     });
 
@@ -146,42 +150,115 @@ export class SixNimmt extends BaseGame {
       throw new Error('Impossible move!');
     }
 
-    const gameData: ISixNimmtData = JSON.parse(gameDataJSON);
+    let gameData: ISixNimmtData = JSON.parse(gameDataJSON);
     const move: ISixNimmtMove = JSON.parse(moveJSON);
 
     const { cards } = gameData;
     let { players } = gameData;
-    const { card } = move;
+    const { card, rowNumber } = move as (ISixNimmtCardMove & ISixNimmtRowNumberMove);
 
     const playerNumber = this.getPlayerNumber({ userId, players });
 
-    let isCardCutOut = false;
-    players[playerNumber].cardsHand = players[playerNumber].cardsHand.filter(currentCard => {
-      if (!isCardCutOut && currentCard.cardNumber === card.cardNumber) {
-        isCardCutOut = true;
-        return false;
+    let nextPlayersIds: string[] = [];
+
+    if (card) {
+      let isCardCutOut = false;
+      players[playerNumber].cardsHand = players[playerNumber].cardsHand.filter(currentCard => {
+        if (!isCardCutOut && currentCard.cardNumber === card.cardNumber) {
+          isCardCutOut = true;
+          return false;
+        }
+
+        return true;
+      });
+
+      gameData.currentMoves.push({
+        playerId: players[playerNumber].id,
+        card,
+      });
+
+      nextPlayersIds = players
+        .filter(player => !gameData.currentMoves.some(currentMove => currentMove.playerId === player.id))
+        .map(player => player.id);
+    }
+
+    if (card && gameData.currentMoves.length === players.length) {
+      gameData.isCardsPlaying = false;
+      gameData.currentMoves.sort((a, b) => a.card.cardNumber - b.card.cardNumber);
+    }
+
+    if (!card) {
+      const [currentMove] = gameData.currentMoves.splice(0, 1);
+      const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
+      players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumber]);
+      players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
+      gameData.cardsTable[rowNumber] = [currentMove.card];
+      players[currentPlayerNumber].points = this.getPointsForPlayer(players[currentPlayerNumber]);
+    }
+
+    if (gameData.currentMoves.length === players.length || !card) {
+
+      let movesFinished = 0;
+      let movesPaused = false;
+
+      gameData.currentMoves.forEach(currentMove => {
+        if (movesPaused) {
+          return;
+        }
+
+        let rowNumberMinDifference = 0;
+        let minDifference = CARDS_COUNT;
+
+        gameData.cardsTable.forEach((currentRowCards, currentRowNumber) => {
+          const lastCardInRow = currentRowCards[currentRowCards.length - 1];
+          const currentDifference = currentMove.card.cardNumber - lastCardInRow.cardNumber;
+
+          if (currentDifference < 0) {
+            return;
+          }
+
+          if (currentDifference < minDifference) {
+            minDifference = currentDifference;
+            rowNumberMinDifference = currentRowNumber;
+          }
+        });
+
+        if (minDifference === CARDS_COUNT) {
+          movesPaused = true;
+          nextPlayersIds.push(currentMove.playerId);
+          return;
+        }
+
+        movesFinished++;
+
+        if (gameData.cardsTable[rowNumberMinDifference].length < 5) {
+          gameData.cardsTable[rowNumberMinDifference].push(currentMove.card);
+          return;
+        }
+
+        const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
+        players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumberMinDifference]);
+        players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
+        gameData.cardsTable[rowNumberMinDifference] = [currentMove.card];
+        players[currentPlayerNumber].points = this.getPointsForPlayer(players[currentPlayerNumber]);
+      });
+
+      gameData.currentMoves.splice(0, movesFinished);
+
+      if (!gameData.currentMoves.length) {
+        if (gameData.currentRoundMove === HAND_CARDS_COUNT) {
+          players = this.updatePlayerPlaces(players);
+
+          if (true) { // Check win points
+            gameData = this.nextRound(gameData);
+          }
+        } else {
+          gameData.isCardsPlaying = true;
+          nextPlayersIds = players.map(player => player.id);
+          gameData.currentRoundMove++;
+        }
       }
 
-      return true;
-    });
-
-    gameData.currentMoves.push({
-      playerId: players[playerNumber].id,
-      card,
-    });
-
-    players[playerNumber].points = this.getPointsForPlayer(players[playerNumber]);
-
-    const nextPlayersIds = [];
-
-    if (cards.length) {
-      if (playerNumber >= players.length - 1) {
-        nextPlayersIds.push(players[0].id);
-      } else {
-        nextPlayersIds.push(players[playerNumber + 1].id);
-      }
-    } else {
-      players = this.updatePlayerPlaces(players);
     }
 
     return {
@@ -239,6 +316,23 @@ export class SixNimmt extends BaseGame {
     rules.push('The game ends when a player collects a total of 66 or more cattle heads. The winner is the player who has collected the fewest cattle heads.');
 
     return rules;
+  }
+
+  private nextRound = (gameData: ISixNimmtData): ISixNimmtData => {
+    // const gameDataNew = this.startGame(this.getNewGame());
+
+    // gameDataNew.currentRound = gameData.currentRound + 1;
+
+    // gameData.players.forEach((player) => {
+    //   player.dices = [];
+
+    //   for (let j = 0; j < player.dicesCount; j++) {
+    //     player.dices.push(Math.floor(Math.random() * DICE_MAX_FIGURE) + 1);
+    //   }
+
+    // });
+
+    return { ...gameData };
   }
 
   private getPointsForPlayer = (player: ISixNimmtPlayer): number => {

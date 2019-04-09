@@ -4,7 +4,8 @@ import { ISixNimmtCard } from './';
 
 export interface ISixNimmtPlayer extends IBaseGamePlayer {
   cardsHand: ISixNimmtCard[];
-  cardsHandCount: number;
   cardsTaken: ISixNimmtCard[];
+  cardsTakenCount: number;
   points: number;
+  pointsPreviousRounds: number;
 }
