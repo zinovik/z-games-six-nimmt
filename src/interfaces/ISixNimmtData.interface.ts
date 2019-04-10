@@ -7,7 +7,6 @@ export interface ISixNimmtData extends IBaseGameData {
   currentRoundMove: number;
   cards: ISixNimmtCard[];
   cardsTable: ISixNimmtCard[][];
-  cardsLeft: number;
   players: ISixNimmtPlayer[];
   isCardsPlaying: boolean;
   currentMoves: Array<{

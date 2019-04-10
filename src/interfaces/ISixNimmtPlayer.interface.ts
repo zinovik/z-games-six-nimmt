@@ -7,5 +7,5 @@ export interface ISixNimmtPlayer extends IBaseGamePlayer {
   cardsTaken: ISixNimmtCard[];
   cardsTakenCount: number;
   points: number;
-  pointsPreviousRounds: number;
+  pointsCurrentRound: number;
 }
