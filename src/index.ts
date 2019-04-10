@@ -14,8 +14,10 @@ import {
   PLAYERS_MIN,
   PLAYERS_MAX,
   CARDS_COUNT,
+  LOSE_POINTS,
   HAND_CARDS_COUNT,
   ROWS_COUNT,
+  ROW_MAX_LENGTH,
   CATTLE_HEADS_TABLE,
 } from './constants';
 
@@ -41,7 +43,6 @@ export class SixNimmt extends BaseGame {
     const gameData: ISixNimmtData = {
       cards: [],
       cardsTable: [],
-      cardsLeft: 0,
       players: [],
       currentRound: 0,
       currentRoundMove: 0,
@@ -87,11 +88,15 @@ export class SixNimmt extends BaseGame {
         cardsHand.push(cards.splice(Math.floor(Math.random() * cards.length), 1)[0]);
       }
 
+      cardsHand.sort((a, b) => a.cardNumber - b.cardNumber);
+
       return {
         ...player,
         cardsHand,
         cardsTaken: [],
+        cardsTakenCount: 0,
         points: 0,
+        pointsCurrentRound: 0,
       };
     });
 
@@ -105,10 +110,9 @@ export class SixNimmt extends BaseGame {
       gameData: JSON.stringify({
         ...gameData,
         currentRound: 1,
-        currentRoundState: 1,
+        currentRoundMove: 1,
         cards,
         cardsTable,
-        cardsLeft: cards.length,
         players,
         isCardsPlaying: true,
       }), nextPlayersIds,
@@ -126,7 +130,6 @@ export class SixNimmt extends BaseGame {
       gameData.players[index] = {
         ...gameData.players[index],
         cardsHand: [],
-        cardsTaken: [],
       };
     });
 
@@ -138,7 +141,34 @@ export class SixNimmt extends BaseGame {
     move: string,
     userId: string,
   }): boolean => {
-    // TODO
+    const gameData: ISixNimmtData = JSON.parse(gameDataJSON);
+    const move: ISixNimmtMove = JSON.parse(moveJSON);
+
+    const { players, isCardsPlaying } = gameData;
+    const { card, rowNumber } = move as (ISixNimmtCardMove & ISixNimmtRowNumberMove);
+
+    const playerNumber = this.getPlayerNumber({ userId, players });
+
+    if (card) {
+      if (!isCardsPlaying || rowNumber >= 0) {
+        return false;
+      }
+
+      if (!players[playerNumber].cardsHand.some(handCard => handCard.cardNumber === card.cardNumber && handCard.cattleHeads === card.cattleHeads)) {
+        return false;
+      }
+    }
+
+    if (rowNumber >= 0) {
+      if (isCardsPlaying || card) {
+        return false;
+      }
+
+      if (rowNumber >= ROWS_COUNT) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -192,8 +222,8 @@ export class SixNimmt extends BaseGame {
       const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
       players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumber]);
       players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
+      players[currentPlayerNumber].pointsCurrentRound = this.getPointsForPlayer(players[currentPlayerNumber]);
       gameData.cardsTable[rowNumber] = [currentMove.card];
-      players[currentPlayerNumber].points = this.getPointsForPlayer(players[currentPlayerNumber]);
     }
 
     if (gameData.currentMoves.length === players.length || !card) {
@@ -231,7 +261,7 @@ export class SixNimmt extends BaseGame {
 
         movesFinished++;
 
-        if (gameData.cardsTable[rowNumberMinDifference].length < 5) {
+        if (gameData.cardsTable[rowNumberMinDifference].length < ROW_MAX_LENGTH) {
           gameData.cardsTable[rowNumberMinDifference].push(currentMove.card);
           return;
         }
@@ -239,18 +269,29 @@ export class SixNimmt extends BaseGame {
         const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
         players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumberMinDifference]);
         players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
+        players[currentPlayerNumber].pointsCurrentRound = this.getPointsForPlayer(players[currentPlayerNumber]);
         gameData.cardsTable[rowNumberMinDifference] = [currentMove.card];
-        players[currentPlayerNumber].points = this.getPointsForPlayer(players[currentPlayerNumber]);
       });
 
       gameData.currentMoves.splice(0, movesFinished);
 
       if (!gameData.currentMoves.length) {
         if (gameData.currentRoundMove === HAND_CARDS_COUNT) {
-          players = this.updatePlayerPlaces(players);
 
-          if (true) { // Check win points
+          players = players.map(player => {
+            return {
+              ...player,
+              points: player.points + player.pointsCurrentRound,
+            };
+          });
+
+          if (players.some(player => player.points >= LOSE_POINTS)) {
+            players = this.updatePlayerPlaces(players);
+          } else {
+            gameData.players = players;
             gameData = this.nextRound(gameData);
+            players = gameData.players;
+            nextPlayersIds = players.map(player => player.id);
           }
         } else {
           gameData.isCardsPlaying = true;
@@ -266,7 +307,6 @@ export class SixNimmt extends BaseGame {
         ...gameData,
         cards,
         players,
-        cardsLeft: cards.length,
       }),
       nextPlayersIds,
     };
@@ -319,20 +359,60 @@ export class SixNimmt extends BaseGame {
   }
 
   private nextRound = (gameData: ISixNimmtData): ISixNimmtData => {
-    // const gameDataNew = this.startGame(this.getNewGame());
+    const cards: ISixNimmtCard[] = [];
 
-    // gameDataNew.currentRound = gameData.currentRound + 1;
+    for (let i = 1; i < CARDS_COUNT + 1; i++) {
+      let cardCattleHeads = 0;
 
-    // gameData.players.forEach((player) => {
-    //   player.dices = [];
+      CATTLE_HEADS_TABLE.forEach(([divisor, cattleHeads]) => {
+        if (cardCattleHeads) {
+          return;
+        }
 
-    //   for (let j = 0; j < player.dicesCount; j++) {
-    //     player.dices.push(Math.floor(Math.random() * DICE_MAX_FIGURE) + 1);
-    //   }
+        if (i % divisor === 0) {
+          cardCattleHeads = cattleHeads;
+        }
+      });
 
-    // });
+      cards.push({
+        cardNumber: i,
+        cattleHeads: cardCattleHeads,
+      });
+    }
 
-    return { ...gameData };
+    let { players } = gameData;
+
+    players = players.map(player => {
+      const cardsHand: ISixNimmtCard[] = [];
+
+      for (let i = 0; i < HAND_CARDS_COUNT; i++) {
+        cardsHand.push(cards.splice(Math.floor(Math.random() * cards.length), 1)[0]);
+      }
+
+      cardsHand.sort((a, b) => a.cardNumber - b.cardNumber);
+
+      return {
+        ...player,
+        cardsHand,
+        cardsTaken: [],
+        cardsTakenCount: 0,
+        pointsCurrentRound: 0,
+      };
+    });
+
+    const cardsTable = new Array(ROWS_COUNT).fill(0).map(() => {
+      return cards.splice(Math.floor(Math.random() * cards.length), 1);
+    });
+
+    return {
+      ...gameData,
+      currentRound: gameData.currentRound + 1,
+      currentRoundMove: 1,
+      cards,
+      cardsTable,
+      players,
+      isCardsPlaying: true,
+    };
   }
 
   private getPointsForPlayer = (player: ISixNimmtPlayer): number => {
@@ -346,7 +426,7 @@ export class SixNimmt extends BaseGame {
       playersPlaces.push({ id: player.id, points: player.points });
     });
 
-    playersPlaces.sort((a, b) => b.points - a.points);
+    playersPlaces.sort((a, b) => a.points - b.points);
 
     return players.map(player => {
       let place = 0;
