@@ -284,7 +284,7 @@ export class SixNimmt extends BaseGame {
 
         const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
         players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumberMinDifference]);
-        players[currentPlayerNumber].lastTakenCards = [...gameData.cardsTable[rowNumber]];
+        players[currentPlayerNumber].lastTakenCards = [...gameData.cardsTable[rowNumberMinDifference]];
         players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
         players[currentPlayerNumber].pointsCurrentRound = this.getPointsForPlayer(players[currentPlayerNumber]);
         gameData.cardsTable[rowNumberMinDifference] = [currentMove.card];
