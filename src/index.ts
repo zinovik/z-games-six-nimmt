@@ -97,6 +97,9 @@ export class SixNimmt extends BaseGame {
         cardsTakenCount: 0,
         points: 0,
         pointsCurrentRound: 0,
+        lastPlayedCard: null,
+        lastPlayedCardForPlayers: null,
+        lastTakenCards: [],
       };
     });
 
@@ -130,6 +133,8 @@ export class SixNimmt extends BaseGame {
       gameData.players[index] = {
         ...gameData.players[index],
         cardsHand: [],
+        cardsTaken: [],
+        lastPlayedCard: null,
       };
     });
 
@@ -207,6 +212,8 @@ export class SixNimmt extends BaseGame {
         card,
       });
 
+      players[playerNumber].lastPlayedCard = card;
+
       nextPlayersIds = players
         .filter(player => !gameData.currentMoves.some(currentMove => currentMove.playerId === player.id))
         .map(player => player.id);
@@ -214,6 +221,14 @@ export class SixNimmt extends BaseGame {
 
     if (card && gameData.currentMoves.length === players.length) {
       gameData.isCardsPlaying = false;
+
+      players = players.map(player => {
+        return {
+          ...player,
+          lastPlayedCardForPlayers: player.lastPlayedCard,
+        };
+      });
+
       gameData.currentMoves.sort((a, b) => a.card.cardNumber - b.card.cardNumber);
     }
 
@@ -221,6 +236,7 @@ export class SixNimmt extends BaseGame {
       const [currentMove] = gameData.currentMoves.splice(0, 1);
       const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
       players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumber]);
+      players[currentPlayerNumber].lastTakenCards = [...gameData.cardsTable[rowNumber]];
       players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
       players[currentPlayerNumber].pointsCurrentRound = this.getPointsForPlayer(players[currentPlayerNumber]);
       gameData.cardsTable[rowNumber] = [currentMove.card];
@@ -268,6 +284,7 @@ export class SixNimmt extends BaseGame {
 
         const currentPlayerNumber = this.getPlayerNumber({ userId: currentMove.playerId, players });
         players[currentPlayerNumber].cardsTaken.push(...gameData.cardsTable[rowNumberMinDifference]);
+        players[currentPlayerNumber].lastTakenCards = [...gameData.cardsTable[rowNumber]];
         players[currentPlayerNumber].cardsTakenCount += players[currentPlayerNumber].cardsTaken.length;
         players[currentPlayerNumber].pointsCurrentRound = this.getPointsForPlayer(players[currentPlayerNumber]);
         gameData.cardsTable[rowNumberMinDifference] = [currentMove.card];
@@ -282,6 +299,7 @@ export class SixNimmt extends BaseGame {
             return {
               ...player,
               points: player.points + player.pointsCurrentRound,
+              pointsCurrentRound: 0,
             };
           });
 

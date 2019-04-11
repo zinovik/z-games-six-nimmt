@@ -8,4 +8,7 @@ export interface ISixNimmtPlayer extends IBaseGamePlayer {
   cardsTakenCount: number;
   points: number;
   pointsCurrentRound: number;
+  lastPlayedCard: ISixNimmtCard | null;
+  lastPlayedCardForPlayers: ISixNimmtCard | null;
+  lastTakenCards: ISixNimmtCard[];
 }
