@@ -39,6 +39,13 @@ export class SixNimmt extends BaseGame {
     return NAME_WORK;
   }
 
+  public getOptionsVariants = (): Array<{ name: string, values: string[] }> => {
+    return [{
+      name: 'Game Variant',
+      values: ['Classic', 'Tactic'],
+    }];
+  }
+
   public getNewGame = (): { playersMax: number, playersMin: number, gameData: string } => {
     const gameData: ISixNimmtData = {
       cards: [],
@@ -48,6 +55,10 @@ export class SixNimmt extends BaseGame {
       currentRoundMove: 0,
       currentMoves: [],
       isCardsPlaying: false,
+      options: [{
+        name: 'Game Variant',
+        value: 'Classic',
+      }],
     };
 
     return {
@@ -62,7 +73,10 @@ export class SixNimmt extends BaseGame {
     const { cards } = gameData;
     let { players } = gameData;
 
-    for (let i = 1; i < CARDS_COUNT + 1; i++) {
+    const gameVariantOption = gameData.options.find(option => option.name === 'Game Variant');
+    const cardsCount = gameVariantOption && gameVariantOption.value === 'Tactic' ? players.length * 10 + 4 : CARDS_COUNT;
+
+    for (let i = 1; i < cardsCount + 1; i++) {
       let cardCattleHeads = 0;
 
       CATTLE_HEADS_TABLE.forEach(([divisor, cattleHeads]) => {
