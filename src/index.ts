@@ -393,7 +393,12 @@ export class SixNimmt extends BaseGame {
   private nextRound = (gameData: ISixNimmtData): ISixNimmtData => {
     const cards: ISixNimmtCard[] = [];
 
-    for (let i = 1; i < CARDS_COUNT + 1; i++) {
+    let { players } = gameData;
+
+    const gameVariantOption = gameData.options.find(option => option.name === 'Game Variant');
+    const cardsCount = gameVariantOption && gameVariantOption.value === 'Tactic' ? players.length * 10 + 4 : CARDS_COUNT;
+
+    for (let i = 1; i < cardsCount + 1; i++) {
       let cardCattleHeads = 0;
 
       CATTLE_HEADS_TABLE.forEach(([divisor, cattleHeads]) => {
@@ -411,8 +416,6 @@ export class SixNimmt extends BaseGame {
         cattleHeads: cardCattleHeads,
       });
     }
-
-    let { players } = gameData;
 
     players = players.map(player => {
       const cardsHand: ISixNimmtCard[] = [];
