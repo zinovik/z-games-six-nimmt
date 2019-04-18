@@ -387,6 +387,12 @@ export class SixNimmt extends BaseGame {
 
     rules.push('The game ends when a player collects a total of 66 or more cattle heads. The winner is the player who has collected the fewest cattle heads.');
 
+    rules.push('Game variation: Tactic');
+
+    rules.push('To make the game more complex, if there are fewer than 10 players, before starting, remove from the deck the cards higher than 10n + 4 (where n is the number of players). E.g. with 5 player you will use only the cards from 1 to 54, excluding the cards from 55 to 104, with 7 player only the cards from 1 to 74 are used. The other rules are unchanged.');
+
+    rules.push('This variation is clearly more strategic than the basic rules since it is possible to know which cards have been already played and which ones are available to other players.');
+
     return rules;
   }
 
