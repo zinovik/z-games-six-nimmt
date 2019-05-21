@@ -40,10 +40,13 @@ export class SixNimmt extends BaseGame {
   }
 
   public getOptionsVariants = (): Array<{ name: string, values: string[] }> => {
-    return [{
-      name: 'Game Variant',
-      values: ['Classic', 'Tactic'],
-    }];
+    return [
+      ...super.getOptionsVariants(),
+      {
+        name: 'Game Variant',
+        values: ['Classic', 'Tactic'],
+      },
+    ];
   }
 
   public getNewGame = (): { playersMax: number, playersMin: number, gameData: string } => {
@@ -55,10 +58,16 @@ export class SixNimmt extends BaseGame {
       currentRoundMove: 0,
       currentMoves: [],
       isCardsPlaying: false,
-      options: [{
-        name: 'Game Variant',
-        value: 'Classic',
-      }],
+      options: [
+        {
+          name: 'Max Time',
+          value: '1 hour',
+        },
+        {
+          name: 'Game Variant',
+          value: 'Classic',
+        },
+      ],
     };
 
     return {
