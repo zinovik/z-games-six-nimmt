@@ -39,7 +39,7 @@ export class SixNimmt extends BaseGame {
     return NAME_WORK;
   }
 
-  public getOptionsVariants = (): Array<{ name: string, values: string[] }> => {
+  public getOptionsVariants(): Array<{ name: string, values: string[] }> {
     return [
       ...super.getOptionsVariants(),
       {
