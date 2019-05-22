@@ -1,7 +1,7 @@
 export const NAME = '6 Nimmt!';
 export const NAME_WORK = 'six-nimmt';
 
-export const PLAYERS_MIN = 1; // TODO: 2
+export const PLAYERS_MIN = 2;
 export const PLAYERS_MAX = 10;
 
 export const CARDS_COUNT = 104;
