@@ -56,6 +56,7 @@ export class SixNimmt extends BaseGame {
       players: [],
       currentRound: 0,
       currentRoundMove: 0,
+      previousMoves: [],
       currentMoves: [],
       isCardsPlaying: false,
       options: [
@@ -244,6 +245,7 @@ export class SixNimmt extends BaseGame {
 
     if (card && gameData.currentMoves.length === players.length) {
       gameData.isCardsPlaying = false;
+      gameData.previousMoves = [...gameData.currentMoves];
 
       players = players.map(player => {
         return {
