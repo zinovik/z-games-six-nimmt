@@ -10,11 +10,11 @@ export interface ISixNimmtData extends IBaseGameData {
   players: ISixNimmtPlayer[];
   isCardsPlaying: boolean;
   previousMoves: Array<{
-    playerId: string,
-    card: ISixNimmtCard,
+    playerId: string;
+    card: ISixNimmtCard;
   }>;
   currentMoves: Array<{
-    playerId: string,
-    card: ISixNimmtCard,
+    playerId: string;
+    card: ISixNimmtCard;
   }>;
 }

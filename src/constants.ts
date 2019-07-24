@@ -9,10 +9,4 @@ export const HAND_CARDS_COUNT = 10;
 export const ROWS_COUNT = 4;
 export const ROW_MAX_LENGTH = 5;
 export const LOSE_POINTS = 66;
-export const CATTLE_HEADS_TABLE: number[][] = [
-  [55, 7],
-  [11, 5],
-  [10, 3],
-  [5, 2],
-  [1, 1],
-];
+export const CATTLE_HEADS_TABLE: number[][] = [[55, 7], [11, 5], [10, 3], [5, 2], [1, 1]];

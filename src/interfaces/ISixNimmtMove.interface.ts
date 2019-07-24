@@ -1,12 +1,10 @@
-import { IBaseGameMove } from 'z-games-base-game';
-
 import { ISixNimmtCard } from './';
 
-export interface ISixNimmtCardMove extends IBaseGameMove {
+export interface ISixNimmtCardMove {
   card: ISixNimmtCard;
 }
 
-export interface ISixNimmtRowNumberMove extends IBaseGameMove {
+export interface ISixNimmtRowNumberMove {
   rowNumber: number;
 }
 
